@@ -75,7 +75,6 @@ def catch_all(event, data):
     logging.debug("Received non-standard event")
 
 
-sio.connect(SERVER_URL)
 
 logging.debug(f"{sio.sid}")
 while True:
