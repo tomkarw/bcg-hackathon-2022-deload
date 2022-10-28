@@ -10,6 +10,11 @@ from monte_carlo_status import MonteCarloStatus
 from gpiozero import Button, LED
 import time
 
+import board
+import adafruit_dht
+
+temperature_sensor = adafruit_dht.DHT11(board.D17)
+
 lightsensor = Button(2)
 old_lightsensor_state = not lightsensor.is_pressed
 
@@ -81,7 +86,19 @@ def monte_carlo_step(status: MonteCarloStatus):
 
 def update_energy_status():
     current_energy_status.light = lightsensor.is_pressed
+    current_energy_status.environment_temperature = read_temperature_sensor()
     sio.emit("energy_status", current_energy_status.as_json())
+
+def read_temperature_sensor():
+    try:
+        temp = temperature_sensor.temperature
+        print(f"Temperature {temp}")
+        return temp
+    except RuntimeError as error:
+        print(error.args[0])
+    except Exception as error:
+        temperature_sensor.exit()
+        raise error
 
 
 current_monte_carlos_status = MonteCarloStatus(0, 0)
