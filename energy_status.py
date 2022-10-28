@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 @dataclass
 class EnergyStatus:
-    light: float
+    light: bool
     cpu_temperature: float
     environment_temperature: float
 

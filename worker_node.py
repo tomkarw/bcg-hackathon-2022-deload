@@ -7,6 +7,11 @@ from main_node import energy_status
 
 from monte_carlo_status import MonteCarloStatus
 
+from gpiozero import Button, LED
+import time
+
+lightsensor = Button(2)
+old_lightsensor_state = not lightsensor.is_pressed
 
 sio = socketio.Client()
 
@@ -66,12 +71,16 @@ def monte_carlo_step(status: MonteCarloStatus):
     return status
 
 
+def update_energy_status():
+    current_energy_status.light = lightsensor.is_pressed
+    sio.emit("energy_status", current_energy_status.as_json())
+
+
 current_monte_carlos_status = MonteCarloStatus(0, 0)
 current_energy_status = EnergyStatus(0, 100, 100)
 
 while True:
-    current_energy_status.light = random.random()
-    sio.emit("energy_status", current_energy_status.as_json())
+    update_energy_status()
     if is_active:
         monte_carlo_step(current_monte_carlos_status)
     time.sleep(5)
