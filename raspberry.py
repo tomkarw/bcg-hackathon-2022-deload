@@ -22,7 +22,7 @@ def update_energy_status() -> EnergyStatus:
         yellow.on()
     else:
         yellow.off()
-    EnergyStatus(
+    return EnergyStatus(
         light=lightsensor.is_pressed,
         environment_temperature=read_temperature_sensor(),
         cpu_temperature=CPUTemperature().temperature,
