@@ -23,7 +23,8 @@ sio = socketio.Client()
 SERVER_URL = "http://localhost:8080"
 DEBUG = True
 
-green = LED(3)
+green = LED(27)
+yellow = LED(3)
 red = LED(4)
 green.off()
 red.on()
@@ -86,6 +87,11 @@ def monte_carlo_step(status: MonteCarloStatus):
 
 def update_energy_status():
     current_energy_status.light = lightsensor.is_pressed
+    if lightsensor.is_pressed:
+        yellow.on()
+    else:
+        yellow.off()
+    
     current_energy_status.environment_temperature = read_temperature_sensor()
     current_energy_status.cpu_temperature = CPUTemperature().temperature
     sio.emit("energy_status", current_energy_status.as_json())
