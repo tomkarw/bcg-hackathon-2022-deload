@@ -21,4 +21,4 @@ class EnergyStatus:
         )
 
     def estimate(self):
-        return self.light - self.environment_temperature - self.cpu_temperature
+        return int(self.light) - self.environment_temperature - self.cpu_temperature

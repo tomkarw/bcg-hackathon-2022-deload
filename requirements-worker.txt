@@ -3,4 +3,3 @@ websocket-client
 python-socketio[client]
 typing-extensions
 gpiozero
-logging
