@@ -4,6 +4,7 @@ import time
 
 import board
 import adafruit_dht
+import logging
 
 temperature_sensor = adafruit_dht.DHT11(board.D17)
 
@@ -15,6 +16,8 @@ yellow = LED(3)
 red = LED(4)
 green.off()
 red.on()
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def update_energy_status() -> EnergyStatus:
@@ -42,10 +45,12 @@ def read_temperature_sensor():
 
 
 def act_compute_on():
+    logging.info("COMPUTE ON")
     green.on()
     red.off()
 
 
 def act_compute_off():
+    logging.info("COMPUTE OFF")
     green.off()
     red.on()
