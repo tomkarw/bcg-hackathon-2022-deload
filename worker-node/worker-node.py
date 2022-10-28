@@ -4,20 +4,40 @@ import time
 import random
 import json
 
+from MonteCarloStatus import MonteCarloStatus
+
+
 sio = socketio.Client()
 
 SERVER_URL = "http://localhost:8080"
 DEBUG = True
 
 
+
+is_active = False
+compute_result = MonteCarloStatus(0, 0)
+
+
 @sio.on("compute_on")
 def on_message(data):
-    status = MonteCarloStatus.fromJson(data)
-    monte_carlo_step(data)
-    sio.emit("result", data.asJson())
+    compute_result = MonteCarloStatus(data.count_in, data.count_out)
+    is_active = True
 
 
 @sio.on("compute_off")
+def on_message(data):
+    is_active = False
+    send_result(compute_result)
+
+@sio.on("get_result")
+def on_message():
+    send_result(compute_result)
+
+
+def send_result(result: MonteCarloStatus):
+    sio.emit("result", result.toJson())
+
+
 @sio.on("*")
 def catch_all(event, data):
     print("Received non-standard event")
@@ -29,15 +49,6 @@ print("my sid is", sio.sid)
 
 def current_light_status():
     return random.random()
-
-
-@dataclass
-class MonteCarloStatus:
-    count_in: int
-    count_out: int
-
-    def asJson(self):
-        return json.dumps(asdict(self))
 
 
 def monte_carlo_step(status: MonteCarloStatus):
@@ -62,5 +73,6 @@ s = MonteCarloStatus(0, 0)
 
 while True:
     sio.emit("light_status", {"light_status": current_light_status()})
-    time.sleep(0.5)
-    on_message(s)
+    if is_active:
+      monte_carlo_step(s)
+    time.sleep(0.01)
