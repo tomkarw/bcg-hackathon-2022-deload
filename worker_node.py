@@ -83,4 +83,4 @@ while True:
     update_energy_status()
     if is_active:
         monte_carlo_step(current_monte_carlos_status)
-    time.sleep(5)
+    time.sleep(0.5)
