@@ -1,7 +1,8 @@
 from dataclasses import dataclass
+from typing import List
 from aiohttp import web
 import socketio
-import json
+from monte_carlo_status import MonteCarloStatus
 
 ## creates a new Async Socket IO Server
 sio = socketio.AsyncServer()
@@ -10,16 +11,6 @@ app = web.Application()
 # Binds our Socket.IO server to our Web App
 ## instance
 sio.attach(app)
-
-# ## we can define aiohttp endpoints just as we normally
-# ## would with no change
-# async def index(request):
-#     with open("index.html") as f:
-#         return web
-
-# ## We bind our aiohttp endpoint to our app
-# ## router
-# app.router.add_get("/", index).Response(text=f.read(), content_type="text/html")
 
 
 @dataclass
@@ -46,24 +37,36 @@ def disconnect(sid):
     print("nodes", nodes)
 
 
-@sio.on("*")
-async def on_message(unknown, sid, message):
-    nodes[sid].energy_status = message["light_status"]
+@sio.on("energy_status")
+async def on_message(unknown, sid: str, message):
+    nodes[sid].energy_status = message["energy_status"]
     decide_which_node_should_run()
 
 
-def decide_which_node_should_run():
-    best_node = max(nodes, key=lambda node: node.energy_status)
+## choose node with best energy score
+## if it's already computing, do nothing
+## otherwise, find currently computing node and send compute_off event to it
+def decide_which_node_should_run(nodes):
+    best_node = choose_best_node(nodes)
+    if nodes[best_node].is_running:
+        return
     for id in nodes:
-        if id == best_node:
-            if not nodes[id].is_running:
-                # send "compute on" message
-                nodes[id].is_running = True
-                sio.emit("compute_on", room=id)
-        elif nodes[id].is_running:
+        if nodes[id].is_running:
             # send "compute off" message
             nodes[id].is_running = False
             sio.emit("compute_off", room=id)
+
+
+def choose_best_node(nodes: List[dict]) -> str:
+    return max(nodes, key=lambda node: node.energy_status)
+
+
+@sio.on("result")
+def result(unknown, sid: str, data: dict):
+    result = MonteCarloStatus(data.count_in, data.count_off)
+    best_node = choose_best_node(nodes)
+    print(sid, result)
+    sio.emit("compute_on", result, room=best_node)
 
 
 ## We kick off our server

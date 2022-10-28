@@ -13,7 +13,6 @@ SERVER_URL = "http://localhost:8080"
 DEBUG = True
 
 
-
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
 
@@ -28,6 +27,7 @@ def on_message(data):
 def on_message(data):
     is_active = False
     send_result(compute_result)
+
 
 @sio.on("get_result")
 def on_message():
@@ -47,7 +47,7 @@ sio.connect(SERVER_URL)
 print("my sid is", sio.sid)
 
 
-def current_light_status():
+def current_energy_status():
     return random.random()
 
 
@@ -72,7 +72,7 @@ def monte_carlo_step(status: MonteCarloStatus):
 s = MonteCarloStatus(0, 0)
 
 while True:
-    sio.emit("light_status", {"light_status": current_light_status()})
+    sio.emit("energy_status", {"energy_status": current_energy_status()})
     if is_active:
-      monte_carlo_step(s)
+        monte_carlo_step(s)
     time.sleep(0.01)
