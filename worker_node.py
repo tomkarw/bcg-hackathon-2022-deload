@@ -18,6 +18,8 @@ sio = socketio.Client()
 SERVER_URL = "http://localhost:8080"
 DEBUG = True
 
+green = LED(3)
+red = LED(4)
 
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
@@ -27,12 +29,16 @@ compute_result = MonteCarloStatus(0, 0)
 def on_message(data):
     compute_result = MonteCarloStatus(data.count_in, data.count_out)
     is_active = True
+    green.on()
+    red.off()
 
 
 @sio.on("compute_off")
 def on_message(data):
     is_active = False
     send_result(compute_result)
+    green.off()
+    red.on()
 
 
 @sio.on("get_result")
