@@ -17,7 +17,7 @@ green.off()
 red.on()
 
 
-async def update_energy_status() -> EnergyStatus:
+def update_energy_status() -> EnergyStatus:
     if lightsensor.is_pressed:
         yellow.on()
     else:

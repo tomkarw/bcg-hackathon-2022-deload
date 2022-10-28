@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.DEBUG)
 sio = socketio.Client()
 
 SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
-DEBUG = True
+DEBUG = os.environ.get("DEBUG") or True
 
 
 is_active = False
