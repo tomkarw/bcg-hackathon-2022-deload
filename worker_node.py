@@ -7,7 +7,7 @@ from main_node import energy_status
 
 from monte_carlo_status import MonteCarloStatus
 
-from gpiozero import Button, LED
+from gpiozero import Button, LED, CPUTemperature
 import time
 
 import board
@@ -87,6 +87,7 @@ def monte_carlo_step(status: MonteCarloStatus):
 def update_energy_status():
     current_energy_status.light = lightsensor.is_pressed
     current_energy_status.environment_temperature = read_temperature_sensor()
+    current_energy_status.cpu_temperature = CPUTemperature().temperature
     sio.emit("energy_status", current_energy_status.as_json())
 
 def read_temperature_sensor():
