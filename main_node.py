@@ -32,7 +32,7 @@ current_monte_carlo_status = MonteCarloStatus(count_in=0, count_out=0)
 async def connect(sid, *args, **kwargs):
     global current_working_node
     global current_monte_carlo_status
-    logging.debug(f"connect {sid=}")
+    logging.debug(f"connect {sid}")
     nodes[sid] = NodeState()
     if current_working_node is None:
         current_working_node = sid
@@ -43,7 +43,7 @@ async def connect(sid, *args, **kwargs):
 async def disconnect(sid):
     global nodes
     global current_working_node
-    logging.debug(f"disconnect {sid=}")
+    logging.debug(f"disconnect {sid}")
     del nodes[sid]
     if sid == current_working_node:
         await decide_which_node_should_run()
@@ -52,7 +52,7 @@ async def disconnect(sid):
 @sio.on("energy_status")
 async def energy_status(sid: str, message: str):
     global nodes
-    logging.debug(f"{sid=} {message=}")
+    logging.debug(f"{sid} {message}")
     energy_status = EnergyStatus.from_json(message)
     nodes[sid].energy_status = energy_status.estimate()
     await decide_which_node_should_run()
@@ -65,10 +65,10 @@ async def decide_which_node_should_run():
     global nodes
     global current_working_node
     best_node = choose_best_node(nodes)
-    logging.debug(f"{current_working_node=} {best_node=}")
+    logging.debug(f"{current_working_node} {best_node}")
     if best_node == current_working_node:
         return
-    logging.debug(f"compute off, {current_working_node=}")
+    logging.debug(f"compute off, {current_working_node}")
     await sio.emit("compute_off", room=current_working_node)
 
 
@@ -84,7 +84,7 @@ async def result(sid: str, data: str):
     result = MonteCarloStatus(data["count_in"], data["count_out"])
     best_node = choose_best_node(nodes)
     current_working_node = best_node
-    logging.debug(f"compute_on {result=}, {best_node=}")
+    logging.debug(f"compute_on {result}, {best_node}")
     await sio.emit("compute_on", result.as_json(), room=best_node)
 
 

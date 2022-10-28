@@ -73,7 +73,7 @@ def catch_all(event, data):
 
 sio.connect(SERVER_URL)
 
-logging.debug(f"{sio.sid=}")
+logging.debug(f"{sio.sid}")
 while True:
     current_energy_status = update_energy_status()
     sio.emit("energy_status", current_energy_status.as_json())
