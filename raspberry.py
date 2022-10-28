@@ -45,12 +45,10 @@ def read_temperature_sensor():
 
 
 def act_compute_on():
-    logging.info("COMPUTE ON")
     green.on()
     red.off()
 
 
 def act_compute_off():
-    logging.info("COMPUTE OFF")
     green.off()
     red.on()

@@ -2,6 +2,8 @@ from dataclasses import asdict, dataclass
 import json
 from typing_extensions import Self
 
+LIGHT_SIGNIFICANCE = 100
+
 
 @dataclass
 class EnergyStatus:
@@ -21,4 +23,8 @@ class EnergyStatus:
         )
 
     def estimate(self):
-        return int(self.light) - self.environment_temperature - self.cpu_temperature
+        return (
+            LIGHT_SIGNIFICANCE * int(self.light)
+            - self.environment_temperature
+            - self.cpu_temperature
+        )

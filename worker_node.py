@@ -2,10 +2,10 @@ import json
 import socketio
 import time
 import random
-from energy_status import EnergyStatus
 import logging
 import os
 
+from energy_status import EnergyStatus
 from monte_carlo_status import MonteCarloStatus
 
 try:
@@ -13,10 +13,10 @@ try:
 except ModuleNotFoundError:
 
     def act_compute_off():
-        logging.info("COMPUTE OFF")
+        pass
 
     def act_compute_on():
-        logging.info("COMPUTE ON")
+        pass
 
     def update_energy_status() -> EnergyStatus:
         return EnergyStatus(
@@ -26,33 +26,30 @@ except ModuleNotFoundError:
         )
 
 
-## CONFIG ##
-logging.basicConfig(level=logging.DEBUG)
-sio = socketio.Client()
-
 SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
 DEBUG = os.environ.get("DEBUG") or True
 
+## CLIENT
+sio = socketio.Client()
 
+## GLOBAL STATE
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
 
-sio.connect(SERVER_URL)
-logging.debug(f"{sio.sid}")
-
 
 @sio.on("compute_on")
-def compute_on(data):
+def compute_on(data: str):
+    logging.debug("COMPUTE ON")
     global compute_result
     global is_active
-    data = json.loads(data)
-    compute_result = MonteCarloStatus(data["count_in"], data["count_out"])
+    compute_result = MonteCarloStatus.from_json(data)
     is_active = True
     act_compute_on()
 
 
 @sio.on("compute_off")
 def compute_off():
+    logging.debug("COMPUTE OFF")
     global compute_result
     global is_active
     is_active = False
@@ -70,17 +67,17 @@ def send_result(result: MonteCarloStatus):
     sio.emit("result", result.as_json())
 
 
-@sio.on("*")
-def catch_all(event, data):
-    logging.debug("Received non-standard event")
-
-
-
-logging.debug(f"{sio.sid}")
-while True:
-    current_energy_status = update_energy_status()
-    sio.emit("energy_status", current_energy_status.as_json())
-    if is_active:
-        compute_result.step()
-        logging.info(f"PI={compute_result.approximation()}")
-    time.sleep(0.5)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug(f"STARTING NODE, id={sio.sid}")
+    sio.connect(SERVER_URL)
+    while True:
+        logging.debug(f"WORKER LOOP, is_active={is_active}")
+        current_energy_status = update_energy_status()
+        sio.emit("energy_status", current_energy_status.as_json())
+        if is_active:
+            compute_result.step()
+            logging.info(
+                f"PI={compute_result.approximation()}, i={compute_result.count_in + compute_result.count_out}"
+            )
+        time.sleep(1)
