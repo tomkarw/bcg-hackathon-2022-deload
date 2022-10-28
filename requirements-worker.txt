@@ -1,3 +1,4 @@
 requests
 websocket-client
 python-socketio[client]
+typing-extensions

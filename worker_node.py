@@ -2,9 +2,10 @@ from dataclasses import asdict, dataclass
 import socketio
 import time
 import random
-import json
+from energy_status import EnergyStatus
+from main_node import energy_status
 
-from MonteCarloStatus import MonteCarloStatus
+from monte_carlo_status import MonteCarloStatus
 
 
 sio = socketio.Client()
@@ -47,10 +48,6 @@ sio.connect(SERVER_URL)
 print("my sid is", sio.sid)
 
 
-def current_energy_status():
-    return random.random()
-
-
 def monte_carlo_step(status: MonteCarloStatus):
     rand_x = random.uniform(-1, 1)
     rand_y = random.uniform(-1, 1)
@@ -69,10 +66,12 @@ def monte_carlo_step(status: MonteCarloStatus):
     return status
 
 
-s = MonteCarloStatus(0, 0)
+current_monte_carlos_status = MonteCarloStatus(0, 0)
+current_energy_status = EnergyStatus(0, 100, 100)
 
 while True:
-    sio.emit("energy_status", {"energy_status": current_energy_status()})
+    current_energy_status.light = random.random()
+    sio.emit("energy_status", current_energy_status.as_json())
     if is_active:
-        monte_carlo_step(s)
-    time.sleep(0.01)
+        monte_carlo_step(current_monte_carlos_status)
+    time.sleep(5)
