@@ -38,7 +38,7 @@ is_active = False
 compute_result = MonteCarloStatus(0, 0)
 
 sio.connect(SERVER_URL)
-logging.debug(f"{sio.sid=}")
+logging.debug(f"{sio.sid}")
 
 
 @sio.on("compute_on")
