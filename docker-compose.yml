@@ -10,7 +10,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - ./table.sql:/docker-entrypoint-initdb.d/table.sql
+      - ./sql/:/docker-entrypoint-initdb.d/
   grafana:
     image: grafana/grafana:latest
     ports:

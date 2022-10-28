@@ -1,3 +1,5 @@
 python-socketio
 aiohttp
 typing-extensions
+postgres
+python-dotenv
