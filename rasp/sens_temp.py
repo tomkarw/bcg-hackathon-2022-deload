@@ -7,9 +7,9 @@ while True:
     try:
         temp = sensor.temperature
         humidity = sensor.humidity
-        print("Temperature: {}*C   Humidity: {}% ".format(temp, humidity))
+        logging.debug("Temperature: {}*C   Humidity: {}% ".format(temp, humidity))
     except RuntimeError as error:
-        print(error.args[0])
+        logging.debug(error.args[0])
         time.sleep(2.0)
         continue
     except Exception as error:

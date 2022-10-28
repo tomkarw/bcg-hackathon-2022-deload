@@ -1,118 +1,83 @@
-from dataclasses import asdict, dataclass
+import json
 import socketio
 import time
 import random
 from energy_status import EnergyStatus
-from main_node import energy_status
+import logging
 
 from monte_carlo_status import MonteCarloStatus
 
-from gpiozero import Button, LED, CPUTemperature
-import time
+try:
+    from raspberry import act_compute_off, act_compute_on, update_energy_status
+except ModuleNotFoundError:
 
-import board
-import adafruit_dht
+    def act_compute_off():
+        logging.info("COMPUTE OFF")
 
-temperature_sensor = adafruit_dht.DHT11(board.D17)
+    def act_compute_on():
+        logging.info("COMPUTE ON")
 
-lightsensor = Button(2)
-old_lightsensor_state = not lightsensor.is_pressed
+    def update_energy_status() -> EnergyStatus:
+        return EnergyStatus(
+            light=False,
+            cpu_temperature=random.random(),
+            environment_temperature=random.random(),
+        )
 
+
+## CONFIG ##
+logging.basicConfig(level=logging.DEBUG)
 sio = socketio.Client()
 
 SERVER_URL = "http://localhost:8080"
 DEBUG = True
 
-green = LED(27)
-yellow = LED(3)
-red = LED(4)
-green.off()
-red.on()
 
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
 
 
 @sio.on("compute_on")
-def on_message(data):
-    compute_result = MonteCarloStatus(data.count_in, data.count_out)
+def compute_on(data):
+    global compute_result
+    global is_active
+    data = json.loads(data)
+    compute_result = MonteCarloStatus(data["count_in"], data["count_out"])
     is_active = True
-    green.on()
-    red.off()
+    act_compute_on()
 
 
 @sio.on("compute_off")
-def on_message(data):
+def compute_off():
+    global compute_result
+    global is_active
     is_active = False
     send_result(compute_result)
-    green.off()
-    red.on()
+    act_compute_off()
 
 
 @sio.on("get_result")
-def on_message():
+def get_result():
+    global compute_result
     send_result(compute_result)
 
 
 def send_result(result: MonteCarloStatus):
-    sio.emit("result", result.toJson())
+    sio.emit("result", result.as_json())
 
 
 @sio.on("*")
 def catch_all(event, data):
-    print("Received non-standard event")
+    logging.debug("Received non-standard event")
 
 
 sio.connect(SERVER_URL)
-print("my sid is", sio.sid)
 
-
-def monte_carlo_step(status: MonteCarloStatus):
-    rand_x = random.uniform(-1, 1)
-    rand_y = random.uniform(-1, 1)
-
-    origin_dist = rand_x**2 + rand_y**2
-
-    # Checking if (x, y) lies inside the circle
-    if origin_dist <= 1:
-        status.count_in += 1
-
-    status.count_out += 1
-
-    if DEBUG:
-        print(f"Current Approx: {4 * status.count_in / status.count_out}")
-
-    return status
-
-
-def update_energy_status():
-    current_energy_status.light = lightsensor.is_pressed
-    if lightsensor.is_pressed:
-        yellow.on()
-    else:
-        yellow.off()
-    
-    current_energy_status.environment_temperature = read_temperature_sensor()
-    current_energy_status.cpu_temperature = CPUTemperature().temperature
-    sio.emit("energy_status", current_energy_status.as_json())
-
-def read_temperature_sensor():
-    try:
-        temp = temperature_sensor.temperature
-        print(f"Temperature {temp}")
-        return temp
-    except RuntimeError as error:
-        print(error.args[0])
-    except Exception as error:
-        temperature_sensor.exit()
-        raise error
-
-
-current_monte_carlos_status = MonteCarloStatus(0, 0)
-current_energy_status = EnergyStatus(0, 100, 100)
-
+logging.debug(f"{sio.sid=}")
 while True:
-    update_energy_status()
+    current_energy_status = update_energy_status()
+    sio.emit("energy_status", current_energy_status.as_json())
     if is_active:
-        monte_carlo_step(current_monte_carlos_status)
+        compute_result.step()
+        logging.info(f"PI={compute_result.approximation()}")
     time.sleep(0.5)
