@@ -20,6 +20,8 @@ DEBUG = True
 
 green = LED(3)
 red = LED(4)
+green.off()
+red.on()
 
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
