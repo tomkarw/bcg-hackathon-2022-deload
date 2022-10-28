@@ -4,6 +4,7 @@ import time
 import random
 from energy_status import EnergyStatus
 import logging
+import os
 
 from monte_carlo_status import MonteCarloStatus
 
@@ -29,12 +30,15 @@ except ModuleNotFoundError:
 logging.basicConfig(level=logging.DEBUG)
 sio = socketio.Client()
 
-SERVER_URL = "http://localhost:8080"
-DEBUG = True
+SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
+DEBUG = os.environ.get("DEBUG") or True
 
 
 is_active = False
 compute_result = MonteCarloStatus(0, 0)
+
+sio.connect(SERVER_URL)
+logging.debug(f"{sio.sid=}")
 
 
 @sio.on("compute_on")
