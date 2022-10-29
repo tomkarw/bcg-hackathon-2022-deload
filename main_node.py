@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-import json
 from typing import List, Optional
 from aiohttp import web
 import socketio
-from energy_status import EnergyStatus
+from node_status import NodeStatus
 from monte_carlo_status import MonteCarloStatus
 import logging
 import os
-import time
 
+logging.basicConfig(level=logging.DEBUG)
 
 db_name = os.getenv("POSTGRES_DB")
 db_user = os.getenv("POSTGRES_USER")
@@ -28,10 +27,9 @@ except:
     logging.warning("Unable to connect to database, proceeds without database")
     client = None
 
-logging.basicConfig(level=logging.DEBUG)
 
 ## creates a new Async Socket IO Server
-sio = socketio.AsyncServer(cors_allowed_origins='*')
+sio = socketio.AsyncServer(cors_allowed_origins="*")
 ## Creates a new Aiohttp Web Application
 app = web.Application()
 # Binds our Socket.IO server to our Web App
@@ -41,6 +39,8 @@ sio.attach(app)
 
 @dataclass
 class NodeState:
+    node_id: str
+    sid: str
     energy_status: int = 0
 
 
@@ -50,49 +50,45 @@ current_monte_carlo_status = MonteCarloStatus(count_in=0, count_out=0)
 
 
 @sio.event
-async def connect(node_id, environ, auth):
+async def connect(sid, environ, auth):
     global current_working_node
     global current_monte_carlo_status
     global nodes
-    logging.debug(f"connect node_id={node_id}")
-    nodes[node_id] = NodeState()
-    if current_working_node is None:
-        current_working_node = node_id
-        if not client is None:
-            client.run(
-                "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
-                parameters={"node": current_working_node},
-            )
-        current_working_node = node_id
-        await send_compute_on(node_id)
+    logging.debug(f"connect node_id={sid}")
 
 
 @sio.event
-async def disconnect(node_id):
+async def disconnect(sid: str):
     global nodes
     global current_working_node
-    logging.debug(f"disconnect {node_id}")
-    del nodes[node_id]
+    to_delete = None
+    for node_id in nodes:
+        if nodes[node_id].sid == sid:
+            to_delete = node_id
+    del nodes[to_delete]
+    logging.debug(f"disconnect {to_delete}")
     if node_id == current_working_node:
         await decide_which_node_should_run()
 
 
 @sio.on("energy_status")
 async def energy_status(sid: str, message: str):
+    logging.debug(f"energy_status {message}")
     global nodes
-    # logging.debug(f"{sid} {message}")
-    energy_status = EnergyStatus.from_json(message)
+    node_status = NodeStatus.from_json(message)
+    if nodes.get(node_status.node_id) is None:
+        nodes[node_status.node_id] = NodeState(sid=sid, node_id=node_status.node_id)
     if not client is None:
         client.run(
             "INSERT INTO node_state (node, light, cpu_temp, env_temp) VALUES (%(node)s, %(light)s, %(cpu_temp)s, %(env_temp)s)",
             parameters={
-                "node": sid,
-                "light": int(energy_status.light),
-                "cpu_temp": energy_status.cpu_temperature,
-                "env_temp": energy_status.environment_temperature,
+                "node": node_status.node_id,
+                "light": int(node_status.light),
+                "cpu_temp": node_status.cpu_temperature,
+                "env_temp": node_status.environment_temperature,
             },
         )
-    nodes[sid].energy_status = energy_status.estimate()
+    nodes[node_status.node_id].energy_status = node_status.estimate()
     await decide_which_node_should_run()
 
 
@@ -100,17 +96,31 @@ async def energy_status(sid: str, message: str):
 ## if it's already computing, do nothing
 ## otherwise, find currently computing node and send compute_off event to it
 async def decide_which_node_should_run():
+    print("decide_which_node_should_run")
+    logging.debug("decide_which_node_should_run")
     global nodes
     global current_working_node
     best_node = choose_best_node(nodes)
-    # logging.debug(f"{current_working_node} {best_node}")
+    # best node is already computing
     if best_node == current_working_node:
+        logging.debug(f"best node already running: {best_node}")
         return
+    # no node is computing
     if current_working_node is None:
+        if not client is None:
+            client.run(
+                "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
+                parameters={"node": current_working_node},
+            )
+        current_working_node = nodes[best_node].node_id
+        logging.debug(f"no node is computing yet, starting best node: {best_node}")
+        await send_compute_on(nodes[best_node].node_id)
         return
+    # switch to best node
     logging.debug(f"compute off, {current_working_node}")
     if not client is None:
         client.run(
+            # compute off
             "INSERT INTO computes (node, compute) VALUES (%(node)s,0)",
             parameters={"node": current_working_node},
         )
@@ -123,27 +133,29 @@ def choose_best_node(nodes: List[dict]) -> Optional[str]:
 
 
 @sio.on("result")
-async def result(event, node_id: str, data: str):
+async def result(sid: str, data: str):
     global current_working_node
     global current_monte_carlo_status
     current_monte_carlo_status = MonteCarloStatus.from_json(data)
     best_node = choose_best_node(nodes)
     current_working_node = best_node
-    logging.debug(f"compute_on result, {best_node}")
-    print("Received result call")
-    if not client is None:
-        client.run(
-            "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
-            parameters={"node": current_working_node},
-        )
     if current_working_node:
+        logging.debug(f"compute_on {result}, {best_node}")
+        if not client is None:
+            client.run(
+                # compute on
+                "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
+                parameters={"node": current_working_node},
+            )
         await send_compute_on(best_node)
 
 
 async def send_compute_on(node_id: str):
     global current_monte_carlo_status
     logging.debug(f"compute_on {current_monte_carlo_status}, {node_id}")
-    await sio.emit("compute_on", current_monte_carlo_status.as_json(), room=node_id)
+    await sio.emit(
+        "compute_on", current_monte_carlo_status.as_json(), room=nodes[node_id].sid
+    )
 
 
 if __name__ == "__main__":

@@ -6,7 +6,8 @@ LIGHT_SIGNIFICANCE = 100
 
 
 @dataclass
-class EnergyStatus:
+class NodeStatus:
+    node_id: str
     light: bool
     cpu_temperature: float
     environment_temperature: float
@@ -16,7 +17,8 @@ class EnergyStatus:
 
     def from_json(data: str) -> Self:
         data = json.loads(data)
-        return EnergyStatus(
+        return NodeStatus(
+            node_id=data["node_id"],
             light=data["light"],
             cpu_temperature=data["cpu_temperature"],
             environment_temperature=data["environment_temperature"],

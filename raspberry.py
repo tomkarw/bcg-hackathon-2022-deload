@@ -1,10 +1,12 @@
-from energy_status import EnergyStatus
+from node_status import NodeStatus
 from gpiozero import Button, LED, CPUTemperature
 import time
 
 import board
 import adafruit_dht
 import logging
+
+NODE_ID = os.environ.get("NODE_ID") or "NODE_" + random.randint(0, 50)
 
 temperature_sensor = adafruit_dht.DHT11(board.D17)
 
@@ -20,12 +22,13 @@ red.on()
 logging.basicConfig(level=logging.DEBUG)
 
 
-def update_energy_status() -> EnergyStatus:
+def update_energy_status() -> NodeStatus:
     if lightsensor.is_pressed:
         yellow.on()
     else:
         yellow.off()
-    return EnergyStatus(
+    return NodeStatus(
+        node_id=NODE_ID,
         light=lightsensor.is_pressed,
         environment_temperature=read_temperature_sensor(),
         cpu_temperature=CPUTemperature().temperature,

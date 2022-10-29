@@ -5,7 +5,7 @@ import random
 import logging
 import os
 
-from energy_status import EnergyStatus
+from node_status import NodeStatus
 from monte_carlo_status import MonteCarloStatus
 
 try:
@@ -18,8 +18,9 @@ except ModuleNotFoundError:
     def act_compute_on():
         pass
 
-    def update_energy_status() -> EnergyStatus:
-        return EnergyStatus(
+    def update_energy_status() -> NodeStatus:
+        return NodeStatus(
+            node_id=NODE_ID,
             light=False,
             cpu_temperature=random.random(),
             environment_temperature=random.random(),
@@ -28,6 +29,7 @@ except ModuleNotFoundError:
 
 SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
 DEBUG = os.environ.get("DEBUG") or True
+NODE_ID = os.environ.get("NODE_ID") or "NODE_" + str(random.randint(0, 50))
 
 ## CLIENT
 sio = socketio.Client()
@@ -80,4 +82,5 @@ if __name__ == "__main__":
             logging.info(
                 f"PI={compute_result.approximation()}, i={compute_result.count_in + compute_result.count_out}"
             )
+            send_result(compute_result)
         time.sleep(1)
