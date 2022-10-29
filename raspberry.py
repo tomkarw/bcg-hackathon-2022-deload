@@ -38,7 +38,8 @@ def update_energy_status() -> NodeStatus:
 def read_temperature_sensor():
     print("read_temperature_sensor")
     # try:
-    temp = temperature_sensor.temperature
+    # temp = temperature_sensor.temperature
+    temp = 24
     print(f"Temperature {temp}")
     return temp
     # except RuntimeError as error:
