@@ -1,12 +1,12 @@
 from node_status import NodeStatus
 from gpiozero import Button, LED, CPUTemperature
-import time
-
+import os
 import board
 import adafruit_dht
 import logging
+import uuid
 
-NODE_ID = os.environ.get("NODE_ID") or "NODE_" + random.randint(0, 50)
+NODE_ID = "NODE_" + hex(uuid.getnode())[2:]
 
 temperature_sensor = adafruit_dht.DHT11(board.D17)
 
