@@ -149,6 +149,9 @@ async def result(sid: str, data: str):
             )
         await send_compute_on(best_node)
 
+@sio.on("get_result")
+async def get_result(sid: str):
+    return current_monte_carlo_status.approximation()
 
 async def send_compute_on(node_id: str):
     global current_monte_carlo_status
