@@ -29,4 +29,6 @@ class MonteCarloStatus:
         self.count_out += 1
 
     def approximation(self):
+        if self.count_out == 0:
+            return 4
         return 4 * self.count_in / self.count_out
