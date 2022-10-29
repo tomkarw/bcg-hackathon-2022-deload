@@ -76,11 +76,16 @@ if __name__ == "__main__":
     while True:
         logging.debug(f"WORKER LOOP, is_active={is_active}")
         current_energy_status = update_energy_status()
+        print("WORKER LOOP after update_energy_status")
         sio.emit("energy_status", current_energy_status.as_json())
+        print("WORKER LOOP after emit energy status")
         if is_active:
+            print("WORKER LOOP is active")
             compute_result.step()
+            print("WORKER LOOP after step")
             logging.info(
                 f"PI={compute_result.approximation()}, i={compute_result.count_in + compute_result.count_out}"
             )
             send_result(compute_result)
+            print("WORKER LOOP after send result")
         time.sleep(1)
