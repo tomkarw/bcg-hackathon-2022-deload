@@ -75,6 +75,7 @@ if __name__ == "__main__":
     logging.debug(f"STARTING NODE, sid={sio.sid}")
     while True:
         logging.debug(f"WORKER LOOP, is_active={is_active}")
+        print("WORKER LOOP before update energy status")
         current_energy_status = update_energy_status()
         print("WORKER LOOP after update_energy_status")
         sio.emit("energy_status", current_energy_status.as_json())
