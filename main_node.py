@@ -53,7 +53,7 @@ async def connect(sid, environ, auth):
     global current_working_node
     global current_monte_carlo_status
     global nodes
-    logging.debug(f"connect node_id={sid}")
+    logging.debug(f"connect sid={sid}")
 
 
 @sio.event

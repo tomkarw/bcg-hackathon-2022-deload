@@ -72,8 +72,8 @@ def send_result(result: MonteCarloStatus):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    logging.debug(f"STARTING NODE, id={sio.sid}")
     sio.connect(SERVER_URL)
+    logging.debug(f"STARTING NODE, sid={sio.sid}")
     while True:
         logging.debug(f"WORKER LOOP, is_active={is_active}")
         current_energy_status = update_energy_status()
