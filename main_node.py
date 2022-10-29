@@ -67,7 +67,7 @@ async def disconnect(sid: str):
     if to_delete:
         del nodes[to_delete]
     logging.debug(f"disconnect {to_delete}")
-    if node_id == current_working_node:
+    if to_delete == current_working_node:
         await decide_which_node_should_run()
 
 
