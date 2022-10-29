@@ -9,16 +9,15 @@ import os
 
 logging.basicConfig(level=logging.DEBUG)
 
-db_name = os.getenv("POSTGRES_DB")
-db_user = os.getenv("POSTGRES_USER")
-db_pass = os.getenv("POSTGRES_PASSWORD")
-db_host = os.getenv("POSTGRES_HOST")
-
 try:
     from dotenv import load_dotenv
     from postgres import Postgres
 
     load_dotenv()
+    db_name = os.getenv("POSTGRES_DB")
+    db_user = os.getenv("POSTGRES_USER")
+    db_pass = os.getenv("POSTGRES_PASSWORD")
+    db_host = os.getenv("POSTGRES_HOST")
 
     client = Postgres(
         "postgresql://%s:%s@%s:5432/%s" % (db_user, db_pass, db_host, db_name)
