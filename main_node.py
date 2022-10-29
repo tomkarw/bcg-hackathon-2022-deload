@@ -129,7 +129,7 @@ async def result(node_id: str, data: str):
     current_monte_carlo_status = MonteCarloStatus.from_json(data)
     best_node = choose_best_node(nodes)
     current_working_node = best_node
-    logging.debug(f"compute_on {result}, {best_node}")
+    logging.debug(f"compute_on result, {best_node}")
     if not client is None:
         client.run(
             "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
