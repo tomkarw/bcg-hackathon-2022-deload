@@ -151,7 +151,7 @@ async def result(sid: str, data: str):
 
 @sio.on("get_result")
 async def get_result(sid: str):
-    await sio.emit("get_result_back", current_monte_carlo_status.approximation(), room=sid)
+    await sio.emit("get_result_back", { "current_approximation": current_monte_carlo_status.approximation(), "nodes": nodes} , room=sid)
     return current_monte_carlo_status.approximation()
 
 async def send_compute_on(node_id: str):
