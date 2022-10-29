@@ -106,13 +106,13 @@ async def decide_which_node_should_run():
         return
     # no node is computing
     if current_working_node is None:
+        logging.debug(f"no node is computing yet, starting best node: {best_node}")
+        current_working_node = nodes[best_node].node_id
         if not client is None:
             client.run(
                 "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
                 parameters={"node": current_working_node},
             )
-        current_working_node = nodes[best_node].node_id
-        logging.debug(f"no node is computing yet, starting best node: {best_node}")
         await send_compute_on(nodes[best_node].node_id)
         return
     # switch to best node
@@ -148,10 +148,19 @@ async def result(sid: str, data: str):
             )
         await send_compute_on(best_node)
 
+
 @sio.on("get_result")
 async def get_result(sid: str):
-    await sio.emit("get_result_back", { "current_approximation": current_monte_carlo_status.approximation(), "nodes": json.dumps(nodes)} , room=sid)
+    await sio.emit(
+        "get_result_back",
+        {
+            "current_approximation": current_monte_carlo_status.approximation(),
+            "nodes": json.dumps(nodes),
+        },
+        room=sid,
+    )
     return current_monte_carlo_status.approximation()
+
 
 async def send_compute_on(node_id: str):
     global current_monte_carlo_status
