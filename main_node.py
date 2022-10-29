@@ -138,17 +138,7 @@ async def result(sid: str, data: str):
     global current_working_node
     global current_monte_carlo_status
     current_monte_carlo_status = MonteCarloStatus.from_json(data)
-    best_node = choose_best_node(nodes)
-    current_working_node = best_node
-    if current_working_node:
-        logging.debug(f"compute_on, {best_node}")
-        if not client is None:
-            client.run(
-                # compute on
-                "INSERT INTO computes (node, compute) VALUES (%(node)s,1)",
-                parameters={"node": current_working_node},
-            )
-        await send_compute_on(best_node)
+    await decide_which_node_should_run()
 
 
 @sio.on("get_result")
