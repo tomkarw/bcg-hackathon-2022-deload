@@ -31,7 +31,7 @@ except:
 logging.basicConfig(level=logging.DEBUG)
 
 ## creates a new Async Socket IO Server
-sio = socketio.AsyncServer()
+sio = socketio.AsyncServer(cors_allowed_origins='*')
 ## Creates a new Aiohttp Web Application
 app = web.Application()
 # Binds our Socket.IO server to our Web App
