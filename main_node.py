@@ -149,12 +149,19 @@ async def get_result(sid: str):
     return current_monte_carlo_status.approximation()
 
 
-async def send_compute_on(node_id: str):
+async def send_compute_on(best_id: str):
     global current_monte_carlo_status
-    logging.debug(f"compute_on {current_monte_carlo_status}, {node_id}")
-    await sio.emit(
-        "compute_on", current_monte_carlo_status.as_json(), room=nodes[node_id].sid
-    )
+    global nodes
+    logging.debug(f"compute_on {current_monte_carlo_status}, {best_id}")
+    for node_id in nodes:
+        if node_id == best_id:
+            await sio.emit(
+                "compute_on",
+                current_monte_carlo_status.as_json(),
+                room=nodes[best_id].sid,
+            )
+        else:
+            await sio.emit("compute_off", room=nodes[node_id].sid)
 
 
 if __name__ == "__main__":
