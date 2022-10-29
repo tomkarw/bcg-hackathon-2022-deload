@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def update_energy_status() -> NodeStatus:
-    print("update_energy_status")
+    # print("update_energy_status")
     if lightsensor.is_pressed:
         yellow.on()
     else:
@@ -36,11 +36,11 @@ def update_energy_status() -> NodeStatus:
 
 
 def read_temperature_sensor():
-    print("read_temperature_sensor")
+    # print("read_temperature_sensor")
     # try:
     # temp = temperature_sensor.temperature
     temp = 24
-    print(f"Temperature {temp}")
+    # print(f"Temperature {temp}")
     return temp
     # except RuntimeError as error:
     #     print(error.args[0])

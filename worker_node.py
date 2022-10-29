@@ -10,8 +10,12 @@ from monte_carlo_status import MonteCarloStatus
 
 try:
     from raspberry import act_compute_off, act_compute_on, update_energy_status
+
+    NODE_ID = "NODE_" + hex(uuid.getnode())[2:]
 except ModuleNotFoundError:
     print("NOT A RASPBERRY, IMPORTS FAILED!")
+
+    NODE_ID = "NODE_" + str(random.randint(0, 10))
 
     def act_compute_off():
         pass
@@ -30,7 +34,8 @@ except ModuleNotFoundError:
 
 SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
 DEBUG = os.environ.get("DEBUG") or True
-NODE_ID = "NODE_" + hex(uuid.getnode())[2:]
+
+logging.basicConfig(level=logging.DEBUG)
 
 ## CLIENT
 sio = socketio.Client()
@@ -71,23 +76,22 @@ def send_result(result: MonteCarloStatus):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     sio.connect(SERVER_URL)
     logging.debug(f"STARTING NODE, sid={sio.sid}")
     while True:
         logging.debug(f"WORKER LOOP, is_active={is_active}")
-        print("WORKER LOOP before update energy status")
+        # print("WORKER LOOP before update energy status")
         current_energy_status = update_energy_status()
-        print("WORKER LOOP after update_energy_status")
+        # print("WORKER LOOP after update_energy_status")
         sio.emit("energy_status", current_energy_status.as_json())
         print("WORKER LOOP after emit energy status")
         if is_active:
-            print("WORKER LOOP is active")
+            # print("WORKER LOOP is active")
             compute_result.step()
-            print("WORKER LOOP after step")
+            # print("WORKER LOOP after step")
             logging.info(
                 f"PI={compute_result.approximation()}, i={compute_result.count_in + compute_result.count_out}"
             )
             send_result(compute_result)
-            print("WORKER LOOP after send result")
+            # print("WORKER LOOP after send result")
         time.sleep(1)

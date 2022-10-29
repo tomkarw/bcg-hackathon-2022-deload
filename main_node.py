@@ -100,6 +100,7 @@ async def decide_which_node_should_run():
     logging.debug("decide_which_node_should_run")
     global nodes
     global current_working_node
+    print("nodes = ", nodes.keys())
     best_node = choose_best_node(nodes)
     # best node is already computing
     if best_node == current_working_node:
@@ -140,7 +141,7 @@ async def result(sid: str, data: str):
     best_node = choose_best_node(nodes)
     current_working_node = best_node
     if current_working_node:
-        logging.debug(f"compute_on {result}, {best_node}")
+        logging.debug(f"compute_on, {best_node}")
         if not client is None:
             client.run(
                 # compute on
