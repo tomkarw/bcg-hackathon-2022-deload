@@ -4,6 +4,7 @@ import time
 import random
 import logging
 import os
+import uuid
 
 from node_status import NodeStatus
 from monte_carlo_status import MonteCarloStatus
@@ -29,7 +30,7 @@ except ModuleNotFoundError:
 
 SERVER_URL = os.environ.get("SERVER_URL") or "http://localhost:8080"
 DEBUG = os.environ.get("DEBUG") or True
-NODE_ID = os.environ.get("NODE_ID") or "NODE_" + str(random.randint(0, 50))
+NODE_ID = "NODE_" + hex(uuid.getnode())[2:]
 
 ## CLIENT
 sio = socketio.Client()
