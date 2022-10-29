@@ -11,6 +11,7 @@ from monte_carlo_status import MonteCarloStatus
 try:
     from raspberry import act_compute_off, act_compute_on, update_energy_status
 except ModuleNotFoundError:
+    print("NOT A RASPBERRY, IMPORTS FAILED!")
 
     def act_compute_off():
         pass
