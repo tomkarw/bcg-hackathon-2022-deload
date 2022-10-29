@@ -35,15 +35,15 @@ def update_energy_status() -> NodeStatus:
 
 
 def read_temperature_sensor():
-    try:
-        temp = temperature_sensor.temperature
-        print(f"Temperature {temp}")
-        return temp
-    except RuntimeError as error:
-        print(error.args[0])
-    except Exception as error:
-        temperature_sensor.exit()
-        raise error
+    # try:
+    temp = temperature_sensor.temperature
+    print(f"Temperature {temp}")
+    return temp
+    # except RuntimeError as error:
+    #     print(error.args[0])
+    # except Exception as error:
+    #     temperature_sensor.exit()
+    #     raise error
 
 
 def act_compute_on():
