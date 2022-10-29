@@ -1,6 +1,5 @@
 from node_status import NodeStatus
 from gpiozero import Button, LED, CPUTemperature
-import os
 import board
 import adafruit_dht
 import logging

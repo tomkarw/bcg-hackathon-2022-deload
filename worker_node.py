@@ -1,4 +1,3 @@
-import json
 import socketio
 import time
 import random

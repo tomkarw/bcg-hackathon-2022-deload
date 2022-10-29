@@ -64,7 +64,8 @@ async def disconnect(sid: str):
     for node_id in nodes:
         if nodes[node_id].sid == sid:
             to_delete = node_id
-    del nodes[to_delete]
+    if to_delete:
+        del nodes[to_delete]
     logging.debug(f"disconnect {to_delete}")
     if node_id == current_working_node:
         await decide_which_node_should_run()
@@ -151,7 +152,9 @@ async def result(sid: str, data: str):
 
 @sio.on("get_result")
 async def get_result(sid: str):
-    await sio.emit("get_result_back", current_monte_carlo_status.approximation() , room=sid)
+    await sio.emit(
+        "get_result_back", current_monte_carlo_status.approximation(), room=sid
+    )
     return current_monte_carlo_status.approximation()
 
 
